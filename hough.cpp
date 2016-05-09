@@ -2,18 +2,42 @@
 #include <highgui.h>
 #include <iostream>
 #include <vector>
+#include <stdlib.h>
+#include <getopt.h>
 
 #define ACCURANCY 0.1
 
 void houghLine(IplImage* original, int limit);
 IplImage* create_phase(IplImage* src, IplImage* bin, int &RMax);
+void usage();
+
 
 int main(int argc, char* argv[]) {
 
-    IplImage *original = 0;
+    int ch;
+    int iflag = 0, 
+        lflag = 0;
+    int limit;
+    char* filename;
+    char * endptr;
 
-    char* filename = argv[1];
-    int limit = atoi(argv[2]); 
+    while ( (ch = getopt(argc, argv, "i:l:")) != -1) {
+        switch (ch) {
+        case 'i':
+            iflag = 1;
+            filename = optarg;
+            break;
+        case 'l':
+            lflag = 1;
+            limit = atoi(optarg);
+            break;
+        default:
+            usage();
+            return 0;
+        }
+    }
+
+    IplImage *original = 0;
     original = cvLoadImage(filename, 0);
 
     std::cout << "Original image: " << filename << std::endl;
@@ -126,4 +150,12 @@ IplImage* create_phase(IplImage* src, IplImage* bin, int &RMax){
     }
 
     return phase;
+}
+
+void usage(){
+    printf( "Usage: [options]\n\n"
+        "Options:\n"
+        "\t-i  - image path\n"
+        "\t-l  - limit\n"
+    );
 }
