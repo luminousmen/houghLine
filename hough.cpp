@@ -1,27 +1,30 @@
 #include <cv.h>
 #include <highgui.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
 #include <iostream>
 #include <vector>
 
-void houghLine(IplImage* original, float accuracy=0.1);
+#define ACCURANCY 0.1
+
+void houghLine(IplImage* original, int limit);
+IplImage* create_phase(IplImage* src, IplImage* bin, int &RMax);
 
 int main(int argc, char* argv[]) {
 
     IplImage *original=0;
 
     char* filename = argv[1];
+    int limit = atoi(argv[2]);
     original = cvLoadImage(filename, 0);
 
-    printf("[i] image: %s\n", filename);
+    std::cout << "Original image: " << filename << std::endl;
     assert( original != 0 );
 
     cvNamedWindow( "original", 1 );
     cvShowImage( "original", original );
 
-    houghLine(original);
+    houghLine(original, limit);
 
     cvWaitKey(0);
 
@@ -31,7 +34,7 @@ int main(int argc, char* argv[]) {
 }
 
 
-void houghLine(IplImage* original, float accuracy) {
+void houghLine(IplImage* original, int limit) {
     assert(original != 0);
 
     IplImage *src = 0, *rgb = 0;
@@ -49,49 +52,17 @@ void houghLine(IplImage* original, float accuracy) {
     cvNamedWindow( "bin", 1 );
     cvShowImage( "bin", bin );
 
-    int RMax = cvRound( sqrt( (double)(src->width * src->width + src->height * src->height) ) );
-    phase = cvCreateImage(cvSize(RMax, 180), IPL_DEPTH_16U, 1);
-    cvZero(phase);
-
-    int x = 0, y = 0, r = 0, f = 0;
-    float theta = 0;
-
-    for(y = 0; y < bin->height; y++){
-        uchar* ptr = (uchar*) (bin->imageData + y * bin->widthStep);
-        for(x = 0; x < bin->width; x++){
-            if(ptr[x] > 0) { // это пиксель контура?
-                for(f = 0; f < 180; f++) { //перебираем все возможные углы наклона
-                    short* ptrP = (short*) (phase->imageData + f * phase->widthStep);
-                    for(r = 0; r < RMax; r++){ // перебираем все возможные расстояния от начала координат
-                        theta = f * CV_PI / 180.0; // переводим градусы в радианы
-
-                        if ( abs(( (y)*sin(theta) + (x)*cos(theta)) - r) < accuracy ) {
-                            ptrP[r]++;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    cvNamedWindow( "phase", 1 );
-    cvShowImage( "phase", phase );
-
-    IplImage* phaseImage = cvCreateImage( cvSize(phase->width * 3, phase->height * 3), IPL_DEPTH_16U, 1);
-    cvResize(phase, phaseImage);
-
-    cvNamedWindow( "phaseImage", 1 );
-    cvShowImage( "phaseImage", phaseImage);
+    int RMax;
+    phase = create_phase(src, bin, RMax);
 
     unsigned int MaxPhaseValue = 0;
-    unsigned int limit = 300;
 
     std::vector<float> thetas;
     std::vector<int> rs;
     
-    for(f = 0; f < 180; f++){ //перебираем все возможные углы наклона
+    for(int f = 0; f < 180; f++){ //перебираем все возможные углы наклона
         short* ptrP = (short*) (phase->imageData + f * phase->widthStep);
-        for(r = 0; r < RMax; r++) { // перебираем все возможные расстояния от начала координат
+        for(int r = 0; r < RMax; r++) { // перебираем все возможные расстояния от начала координат
             if(ptrP[r] > limit) {
                 MaxPhaseValue = ptrP[r];
 
@@ -101,9 +72,9 @@ void houghLine(IplImage* original, float accuracy) {
         }
     }
     
-    for(y = 0; y < rgb->height; y++) {
+    for(int y = 0; y < rgb->height; y++) {
         uchar* ptr = (uchar*) (rgb->imageData + y * rgb->widthStep);
-        for(x = 0; x < rgb->width; x++){
+        for(int x = 0; x < rgb->width; x++){
 
             for(int i = 0; i < thetas.size(); i++) {
                 float Theta = thetas[i] * CV_PI / 180.0;
@@ -125,5 +96,39 @@ void houghLine(IplImage* original, float accuracy) {
 
     cvReleaseImage(&bin);
     cvReleaseImage(&phase);
-    cvReleaseImage(&phaseImage);
+}
+
+
+IplImage* create_phase(IplImage* src, IplImage* bin, int &RMax){
+    
+    IplImage *phase = 0;
+
+    RMax = cvRound( sqrt( (double)(src->width * src->width + src->height * src->height) ) );
+    phase = cvCreateImage(cvSize(RMax, 180), IPL_DEPTH_16U, 1);
+    cvZero(phase);
+
+    int x = 0, y = 0, r = 0, f = 0;
+    float theta = 0;
+
+    for(y = 0; y < bin->height; y++){
+        uchar* ptr = (uchar*) (bin->imageData + y * bin->widthStep);
+        for(x = 0; x < bin->width; x++){
+            if(ptr[x] > 0) {
+                for(int f = 0; f < 180; f++) {
+                    short* ptrP = (short*) (phase->imageData + f * phase->widthStep);
+                    for(int r = 0; r < RMax; r++) {
+                        theta = f * CV_PI / 180.0; 
+
+                        if ( abs(( (y)*sin(theta) + (x)*cos(theta)) - r) < ACCURANCY ) {
+                            ptrP[r]++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    cvNamedWindow( "phase", 1 );
+    cvShowImage( "phase", phase );
+    return phase;
 }
