@@ -6,7 +6,32 @@
 #include <iostream>
 #include <vector>
 
-void houghLine(IplImage* original, float accuracy=0.1) {
+void houghLine(IplImage* original, float accuracy=0.1);
+
+int main(int argc, char* argv[]) {
+
+    IplImage *original=0;
+
+    char* filename = argv[1];
+    original = cvLoadImage(filename, 0);
+
+    printf("[i] image: %s\n", filename);
+    assert( original != 0 );
+
+    cvNamedWindow( "original", 1 );
+    cvShowImage( "original", original );
+
+    houghLine(original);
+
+    cvWaitKey(0);
+
+    cvReleaseImage(&original);
+    cvDestroyAllWindows();
+    return 0;
+}
+
+
+void houghLine(IplImage* original, float accuracy) {
     assert(original != 0);
 
     IplImage *src = 0, *rgb = 0;
@@ -70,9 +95,6 @@ void houghLine(IplImage* original, float accuracy=0.1) {
             if(ptrP[r] > limit) {
                 MaxPhaseValue = ptrP[r];
 
-                std::cout << Theta << std::endl;
-                std::cout << R << std::endl;
-
                 thetas.push_back(f);
                 rs.push_back(r);
             }
@@ -84,7 +106,7 @@ void houghLine(IplImage* original, float accuracy=0.1) {
         for(x = 0; x < rgb->width; x++){
 
             for(int i = 0; i < thetas.size(); i++) {
-                Theta = thetas[i] * CV_PI / 180.0;
+                float Theta = thetas[i] * CV_PI / 180.0;
 
                 if ( cvRound(((y) * sin(Theta) + (x) * cos(Theta))) == rs[i]) {
                     ptr[3 * x] = 0;
@@ -104,27 +126,4 @@ void houghLine(IplImage* original, float accuracy=0.1) {
     cvReleaseImage(&bin);
     cvReleaseImage(&phase);
     cvReleaseImage(&phaseImage);
-}
-
-
-int main(int argc, char* argv[]) {
-
-        IplImage *original=0;
-
-        char* filename = argv[1];
-        original = cvLoadImage(filename, 0);
-
-        printf("[i] image: %s\n", filename);
-        assert( original != 0 );
-
-        cvNamedWindow( "original", 1 );
-        cvShowImage( "original", original );
-
-        houghLine(original);
-
-        cvWaitKey(0);
-
-        cvReleaseImage(&original);
-        cvDestroyAllWindows();
-        return 0;
 }
