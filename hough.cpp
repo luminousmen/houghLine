@@ -1,7 +1,5 @@
 #include <cv.h>
 #include <highgui.h>
-#include <stdlib.h>
-#include <math.h>
 #include <iostream>
 #include <vector>
 
@@ -12,10 +10,10 @@ IplImage* create_phase(IplImage* src, IplImage* bin, int &RMax);
 
 int main(int argc, char* argv[]) {
 
-    IplImage *original=0;
+    IplImage *original = 0;
 
     char* filename = argv[1];
-    int limit = atoi(argv[2]);
+    int limit = atoi(argv[2]); 
     original = cvLoadImage(filename, 0);
 
     std::cout << "Original image: " << filename << std::endl;
@@ -93,7 +91,6 @@ void houghLine(IplImage* original, int limit) {
 
     cvReleaseImage(&src);
     cvReleaseImage(&rgb);
-
     cvReleaseImage(&bin);
     cvReleaseImage(&phase);
 }
@@ -128,7 +125,5 @@ IplImage* create_phase(IplImage* src, IplImage* bin, int &RMax){
         }
     }
 
-    cvNamedWindow( "phase", 1 );
-    cvShowImage( "phase", phase );
     return phase;
 }
