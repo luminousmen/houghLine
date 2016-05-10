@@ -1,3 +1,6 @@
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
 #include <cv.h>
 #include <highgui.h>
 
@@ -9,7 +12,7 @@
 #define ACCURANCY 0.1
 
 void houghLine(IplImage* original, int limit);
-IplImage* create_phase(IplImage* src, IplImage* bin, int &RMax);
+cv::Mat create_phase(IplImage* src, IplImage* bin, int &RMax);
 void usage();
 
 
@@ -59,8 +62,7 @@ int main(int argc, char* argv[]) {
 
 void houghLine(IplImage* original, int limit) {
 
-    IplImage *src = 0, *rgb = 0, *bin = 0, phase = 0;
-
+    IplImage *src = 0, *rgb = 0, *bin = 0;
     src = cvCloneImage(original);
 
     rgb = cvCreateImage(cvGetSize(src), 8, 3);
@@ -73,13 +75,13 @@ void houghLine(IplImage* original, int limit) {
     cvShowImage( "bin", bin );
 
     int RMax = cvRound( sqrt( (double)(src->width * src->width + src->height * src->height) ) );
-    phase = create_phase(src, bin, RMax);
+    cv::Mat phase = create_phase(src, bin, RMax);
 
     std::vector<float> thetas;
     std::vector<int> rs;
     
     for(int f = 0; f < 180; f++){
-        short* ptrP = (short*) (phase->imageData + f * phase->widthStep);
+        short* ptrP = (short*) (phase.data + f * phase.step);
         for(int r = 0; r < RMax; r++) {
             if(ptrP[r] >= limit) {
                 thetas.push_back(f);
@@ -110,16 +112,12 @@ void houghLine(IplImage* original, int limit) {
     cvReleaseImage(&src);
     cvReleaseImage(&rgb);
     cvReleaseImage(&bin);
-    cvReleaseImage(&phase);
 }
 
 
-IplImage* create_phase(IplImage* src, IplImage* bin, int &RMax){
+cv::Mat create_phase(IplImage* src, IplImage* bin, int &RMax){
     
-    IplImage *phase = 0;
-
-    phase = cvCreateImage(cvSize(RMax, 180), IPL_DEPTH_16U, 1);
-    cvZero(phase);
+    cv::Mat phase = cv::Mat(cv::Size(RMax, 180), IPL_DEPTH_16U, 1);
 
     int x = 0, y = 0, r = 0, f = 0;
     float theta = 0;
@@ -129,7 +127,7 @@ IplImage* create_phase(IplImage* src, IplImage* bin, int &RMax){
         for(x = 0; x < bin->width; x++){
             if(ptr[x] > 0) {
                 for(int f = 0; f < 180; f++) {
-                    short* ptrP = (short*) (phase->imageData + f * phase->widthStep);
+                    short* ptrP = (short*) (phase.data + f * phase.step);
                     for(int r = 0; r < RMax; r++) {
                         theta = f * CV_PI / 180.0; 
 
