@@ -1,7 +1,8 @@
 #include <cv.h>
 #include <highgui.h>
-#include <iostream>
+
 #include <vector>
+#include <iostream>
 #include <stdlib.h>
 #include <getopt.h>
 
@@ -77,17 +78,13 @@ void houghLine(IplImage* original, int limit) {
     int RMax;
     phase = create_phase(src, bin, RMax);
 
-    unsigned int MaxPhaseValue = 0;
-
     std::vector<float> thetas;
     std::vector<int> rs;
     
-    for(int f = 0; f < 180; f++){ //перебираем все возможные углы наклона
+    for(int f = 0; f < 180; f++){
         short* ptrP = (short*) (phase->imageData + f * phase->widthStep);
-        for(int r = 0; r < RMax; r++) { // перебираем все возможные расстояния от начала координат
-            if(ptrP[r] > limit) {
-                MaxPhaseValue = ptrP[r];
-
+        for(int r = 0; r < RMax; r++) {
+            if(ptrP[r] >= limit) {
                 thetas.push_back(f);
                 rs.push_back(r);
             }
@@ -123,6 +120,7 @@ void houghLine(IplImage* original, int limit) {
 IplImage* create_phase(IplImage* src, IplImage* bin, int &RMax){
     
     IplImage *phase = 0;
+    std::std::vector<int> v;
 
     RMax = cvRound( sqrt( (double)(src->width * src->width + src->height * src->height) ) );
     phase = cvCreateImage(cvSize(RMax, 180), IPL_DEPTH_16U, 1);
@@ -153,9 +151,8 @@ IplImage* create_phase(IplImage* src, IplImage* bin, int &RMax){
 }
 
 void usage(){
-    printf( "Usage: [options]\n\n"
+    std::cout << "Usage: [options]\n\n"
         "Options:\n"
         "\t-i  - image path\n"
-        "\t-l  - limit\n"
-    );
+        "\t-l  - limit\n" << std::endl;
 }
