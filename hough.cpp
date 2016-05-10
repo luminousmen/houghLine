@@ -1,9 +1,6 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include <cv.h>
-#include <highgui.h>
-
 #include <vector>
 #include <iostream>
 #include <stdlib.h>
@@ -11,8 +8,8 @@
 
 #define ACCURANCY 0.1
 
-void houghLine(IplImage* original, int limit);
-cv::Mat create_phase(IplImage* src, IplImage* bin, int &RMax);
+void houghLine(cv::Mat original, int limit);
+cv::Mat create_phase(cv::Mat src, cv::Mat bin, int RMax);
 void usage();
 
 
@@ -41,40 +38,32 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    IplImage *original = 0;
-    original = cvLoadImage(filename, 0);
-
+    cv::Mat original = cv::imread(filename);
     std::cout << "Original image: " << filename << std::endl;
-    assert( original != 0 );
-
-    cvNamedWindow( "original", 1 );
-    cvShowImage( "original", original );
 
     houghLine(original, limit);
 
-    cvWaitKey(0);
-
-    cvReleaseImage(&original);
-    cvDestroyAllWindows();
+    cv::waitKey();
     return 0;
 }
 
 
-void houghLine(IplImage* original, int limit) {
+void houghLine(cv::Mat original, int limit) {
 
-    IplImage *src = 0, *rgb = 0, *bin = 0;
-    src = cvCloneImage(original);
+    cv::Mat src, rgb, bin;
+    src = original.clone();
 
-    rgb = cvCreateImage(cvGetSize(src), 8, 3);
-    cvConvertImage(src, rgb, CV_GRAY2BGR);
+    rgb = cv::Mat(src.size(), 8, 3);
 
-    bin = cvCreateImage(cvGetSize(src), IPL_DEPTH_8U, 1);
-    cvCanny(src, bin, 50, 200);
+    cv::cvtColor(src, rgb, cv::COLOR_BGR2GRAY);
 
-    cvNamedWindow( "bin", 1 );
-    cvShowImage( "bin", bin );
+    bin = cv::Mat(src.size(), IPL_DEPTH_8U, 1);
+    cv::Canny(src, bin, 50, 200);
 
-    int RMax = cvRound( sqrt( (double)(src->width * src->width + src->height * src->height) ) );
+    cv::namedWindow( "bin", cv::WINDOW_NORMAL);
+    cv::imshow( "bin", bin );
+
+    int RMax = cvRound( sqrt( (double)(src.cols * src.cols + src.rows * src.rows) ) );
     cv::Mat phase = create_phase(src, bin, RMax);
 
     std::vector<float> thetas;
@@ -90,46 +79,41 @@ void houghLine(IplImage* original, int limit) {
         }
     }
     
-    for(int y = 0; y < rgb->height; y++) {
-        uchar* ptr = (uchar*) (rgb->imageData + y * rgb->widthStep);
-        for(int x = 0; x < rgb->width; x++){
+    for(int y = 0; y < rgb.rows; y++) {
+        uchar* ptr = (uchar*) (rgb.data + y * rgb.step);
+        for(int x = 0; x < rgb.cols; x++){
 
             for(int i = 0; i < thetas.size(); i++) {
                 float Theta = thetas[i] * CV_PI / 180.0;
 
                 if ( cvRound(((y) * sin(Theta) + (x) * cos(Theta))) == rs[i]) {
-                    ptr[3 * x] = 0;
-                    ptr[3 * x + 1] = 0;
-                    ptr[3 * x + 2] = 255; 
+                    ptr[x] = 0;
+                    ptr[x+1] = 0;
+                    ptr[x+2] = 255;
                 }
             }
         }
     }
 
-    cvNamedWindow( "line", 1 );
-    cvShowImage( "line", rgb );
-
-    cvReleaseImage(&src);
-    cvReleaseImage(&rgb);
-    cvReleaseImage(&bin);
+    cv::namedWindow( "line", cv::WINDOW_NORMAL);
+    cv::imshow( "line", rgb );
+    cv::waitKey(0);
 }
 
 
-cv::Mat create_phase(IplImage* src, IplImage* bin, int &RMax){
+cv::Mat create_phase(cv::Mat src, cv::Mat bin, int RMax){
     
-    cv::Mat phase = cv::Mat(cv::Size(RMax, 180), IPL_DEPTH_16U, 1);
-
     int x = 0, y = 0, r = 0, f = 0;
-    float theta = 0;
-
-    for(y = 0; y < bin->height; y++){
-        uchar* ptr = (uchar*) (bin->imageData + y * bin->widthStep);
-        for(x = 0; x < bin->width; x++){
+    cv::Mat phase = cv::Mat(cv::Size(RMax, 180), IPL_DEPTH_16U, 1);
+   
+    for(y = 0; y < bin.rows; y++){
+        uchar* ptr = (uchar*) (bin.data + y * bin.step);
+        for(x = 0; x < bin.cols; x++){
             if(ptr[x] > 0) {
                 for(int f = 0; f < 180; f++) {
                     short* ptrP = (short*) (phase.data + f * phase.step);
                     for(int r = 0; r < RMax; r++) {
-                        theta = f * CV_PI / 180.0; 
+                        float theta = f * CV_PI / 180.0; 
 
                         if ( abs(( (y)*sin(theta) + (x)*cos(theta)) - r) < ACCURANCY ) {
                             ptrP[r]++;
