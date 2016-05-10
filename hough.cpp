@@ -58,11 +58,8 @@ int main(int argc, char* argv[]) {
 
 
 void houghLine(IplImage* original, int limit) {
-    assert(original != 0);
 
-    IplImage *src = 0, *rgb = 0;
-    IplImage *bin = 0;
-    IplImage *phase = 0;
+    IplImage *src = 0, *rgb = 0, *bin = 0, phase = 0;
 
     src = cvCloneImage(original);
 
@@ -75,7 +72,7 @@ void houghLine(IplImage* original, int limit) {
     cvNamedWindow( "bin", 1 );
     cvShowImage( "bin", bin );
 
-    int RMax;
+    int RMax = cvRound( sqrt( (double)(src->width * src->width + src->height * src->height) ) );
     phase = create_phase(src, bin, RMax);
 
     std::vector<float> thetas;
@@ -120,9 +117,7 @@ void houghLine(IplImage* original, int limit) {
 IplImage* create_phase(IplImage* src, IplImage* bin, int &RMax){
     
     IplImage *phase = 0;
-    std::std::vector<int> v;
 
-    RMax = cvRound( sqrt( (double)(src->width * src->width + src->height * src->height) ) );
     phase = cvCreateImage(cvSize(RMax, 180), IPL_DEPTH_16U, 1);
     cvZero(phase);
 
