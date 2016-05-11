@@ -7,7 +7,7 @@ This program implements standart Hough transform algorithm. But it's not uses op
 
 ### Dependencies
 
-* [opencv](https://github.com/Itseez/opencv)
+* [opencv >= 3.0](https://github.com/Itseez/opencv)
 
 
 ### Algorithm
