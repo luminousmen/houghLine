@@ -22,12 +22,13 @@ $ make
 $ ./prog -i lines.png -l 400 
 ```
 
-### Result
+### Results
 
 ![result](/pics/lines.png)
 ![result](/pics/res.png)
 
 Test picture in Hough space:
+
 ![result](/pics/phase.png)
 
 
