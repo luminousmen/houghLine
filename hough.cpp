@@ -77,7 +77,7 @@ void houghLine(cv::Mat original, int limit) {
     for(int f = 0; f < 180; f++){
         short* ptrP = (short*) (phase.data + f * phase.step);
         // by all distancies
-        for(int r = 0; r < RMax; r++) {
+        for(int r = 0; r < RMax; r+=2) {
             if(ptrP[r] >= limit) {
                 thetas.push_back(f);
                 rs.push_back(r);
@@ -101,6 +101,8 @@ void houghLine(cv::Mat original, int limit) {
             }
         }
     }
+    cv::namedWindow( "PHASE", cv::WINDOW_NORMAL);
+    cv::imshow( "PHASE", phase );
 
     cv::namedWindow( "CONTOUR", cv::WINDOW_NORMAL);
     cv::imshow( "CONTOUR", bin );
@@ -124,7 +126,7 @@ cv::Mat create_phase(cv::Mat src, cv::Mat bin, int RMax){
                 for(int f = 0; f < 180; f++) {
                     short* ptrP = (short*) (phase.data + f * phase.step);
                     // by all distancies
-                    for(int r = 0; r < RMax; r++) {
+                    for(int r = 0; r < RMax; r+=2) {
                         // grads to rads
                         float theta = f * CV_PI / 180.0; 
 

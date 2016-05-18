@@ -24,4 +24,17 @@ $ ./prog -i lines.png -l 400
 
 ### Result
 
-![result](/res.png)
+![result](/pics/lines.png)
+![result](/pics/res.png)
+
+Test picture in Hough space:
+![result](/pics/phase.png)
+
+
+### Examples
+
+![photo1](/pics/1.jpeg)
+![result1](/pics/1f.png)
+
+![photo1](/pics/2.jpg)
+![result1](/pics/2f.png)
