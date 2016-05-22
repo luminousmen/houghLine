@@ -18,6 +18,14 @@ This program implements standart Hough transform algorithm. But it's not uses op
 ### Usage
 
 ```bash
+Usage: [options]
+
+Options:
+	-i  - image path
+	-l  - limit
+```
+
+```bash
 $ make
 $ ./prog -i lines.png -l 400 
 ```
